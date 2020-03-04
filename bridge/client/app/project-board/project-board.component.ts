@@ -19,10 +19,11 @@ import {Service} from "../_models/service";
 })
 export class ProjectBoardComponent implements OnInit, OnDestroy {
 
-  public project: Observable<Project>;
+  public project$: Observable<Project>;
   public currentRoot: Root;
   public error: boolean = false;
 
+  private _projectSub: Subscription = Subscription.EMPTY;
   private _routeSubs: Subscription = Subscription.EMPTY;
   private _rootEventsTimer: Subscription = Subscription.EMPTY;
   private _rootEventsTimerInterval = 30;
@@ -37,7 +38,7 @@ export class ProjectBoardComponent implements OnInit, OnDestroy {
       if(params['projectName']) {
         this.currentRoot = null;
 
-        this.project = this.dataService.projects.pipe(
+        this.project$ = this.dataService.projects.pipe(
           map(projects => projects ? projects.find(project => {
             return project.projectName === params['projectName'];
           }) : null)
@@ -46,7 +47,7 @@ export class ProjectBoardComponent implements OnInit, OnDestroy {
         this._rootEventsTimer = timer(0, this._rootEventsTimerInterval*1000)
           .pipe(
             startWith(0),
-            switchMap(() => this.project),
+            switchMap(() => this.project$),
             filter(project => !!project && !!project.getServices())
           )
           .subscribe(project => {
@@ -75,6 +76,17 @@ export class ProjectBoardComponent implements OnInit, OnDestroy {
     return DateUtil.getCalendarFormats(true);
   }
 
+  getLatestDeployment(project: Project, service: Service) {
+    project.getServices()
+      .find(s => s.serviceName == service.serviceName)
+      .roots
+      .forEach(root => {
+        root.traces.forEach(trace => {
+
+        });
+      });
+  }
+
   getRootsLastUpdated(project: Project, service: Service): Date {
     return this.dataService.getRootsLastUpdated(project, service);
   }
@@ -92,9 +104,10 @@ export class ProjectBoardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this._projectSub.unsubscribe();
     this._routeSubs.unsubscribe();
-    this._rootEventsTimer.unsubscribe();
     this._tracesTimer.unsubscribe();
+    this._rootEventsTimer.unsubscribe();
   }
 
 }
