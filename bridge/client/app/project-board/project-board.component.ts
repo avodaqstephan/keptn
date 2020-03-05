@@ -46,8 +46,10 @@ export class ProjectBoardComponent implements OnInit, OnDestroy {
           }) : null)
         );
 
-        this._projectSub = this.project$.subscribe(project => {
-          this._changeDetectorRef.markForCheck();
+        this._projectSub = this.project$.subscribe(projects => {
+          this.error = false;
+        }, error => {
+          this.error = true;
         });
 
         this._rootEventsTimer = timer(0, this._rootEventsTimerInterval*1000)
